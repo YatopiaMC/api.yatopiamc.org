@@ -15,6 +15,10 @@ import net.yatopia.site.api.util.Constants;
 
 public class APIBootstrap {
 
+  private static ObjectNode cached404;
+  private static ObjectNode cached500;
+  private static ObjectNode cachedDefault;
+
   public static void main(String[] args) {
     port(1696);
     initExceptionHandler(Throwable::printStackTrace);
@@ -24,10 +28,14 @@ public class APIBootstrap {
           response.type("application/json");
           response.header("Access-Control-Allow-Origin", "*");
           response.header("Access-Control-Allow-Methods", "GET, OPTIONS");
+          if (cached404 != null) {
+            return cached404;
+          }
           ObjectNode object = Constants.JSON_MAPPER.createObjectNode();
           object.put("error", 404);
           object.put("message", "Route not found");
-          return object;
+          APIBootstrap.cached404 = object;
+          return cached404;
         });
     internalServerError(
         (request, response) -> {
@@ -35,10 +43,14 @@ public class APIBootstrap {
           response.type("application/json");
           response.header("Access-Control-Allow-Origin", "*");
           response.header("Access-Control-Allow-Methods", "GET, OPTIONS");
+          if (cached500 != null) {
+            return cached500;
+          }
           ObjectNode object = Constants.JSON_MAPPER.createObjectNode();
           object.put("error", 500);
           object.put("message", "Internal server error");
-          return object;
+          APIBootstrap.cached500 = object;
+          return cached500;
         });
 
     OptionsHandler options = new OptionsHandler();
@@ -51,11 +63,15 @@ public class APIBootstrap {
           response.header("Access-Control-Allow-Origin", "*");
           response.header("Access-Control-Allow-Methods", "GET, OPTIONS");
           response.status(200);
+          if (cachedDefault != null) {
+            return cachedDefault;
+          }
           ObjectNode object = Constants.JSON_MAPPER.createObjectNode();
           object.put("status", "ONLINE");
           object.put("help", "at discord");
           object.put("forkMe", "https://github.com/YatopiaMC/api.yatopia.net/");
-          return object;
+          APIBootstrap.cachedDefault = object;
+          return cachedDefault;
         });
     options("/", options);
 

@@ -7,9 +7,8 @@ public class Constants {
 
   // settings for anybody forking
   public static final String GH_REPOSITORY = "YatopiaMC/Yatopia";
-  public static final String DEFAULT_BRANCH = "ver/1.16.1";
-  public static final int DEFAULT_RATELIMIT = 150;
-  public static final int DOWNLOAD_RATELIMIT = 10;
+  public static final String DEFAULT_BRANCH = "ver/1.16.2";
+  public static final int RATELIMIT = 100;
 
   public static final ObjectMapper JSON_MAPPER = new ObjectMapper();
   public static final OkHttpClient HTTP_CLIENT = new OkHttpClient();
