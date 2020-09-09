@@ -1,14 +1,14 @@
-package net.yatopia.site.api.objects;
+package net.yatopia.site.api.v1.objects;
 
 import java.util.List;
 
-public final class Build {
+public final class BuildV1 {
 
   private final int number, suiteId;
   private final Branch branch;
   private final List<Artifact> artifacts;
 
-  public Build(int number, int suiteId, Branch branch, List<Artifact> artifacts) {
+  public BuildV1(int number, int suiteId, Branch branch, List<Artifact> artifacts) {
     this.number = number;
     this.suiteId = suiteId;
     this.branch = branch;

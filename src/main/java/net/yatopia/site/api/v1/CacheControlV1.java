@@ -1,4 +1,4 @@
-package net.yatopia.site.api;
+package net.yatopia.site.api.v1;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -10,16 +10,16 @@ import java.io.InputStream;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import net.yatopia.site.api.objects.Artifact;
-import net.yatopia.site.api.objects.Branch;
-import net.yatopia.site.api.objects.Build;
-import net.yatopia.site.api.objects.Commit;
 import net.yatopia.site.api.util.Constants;
+import net.yatopia.site.api.v1.objects.Artifact;
+import net.yatopia.site.api.v1.objects.Branch;
+import net.yatopia.site.api.v1.objects.BuildV1;
+import net.yatopia.site.api.v1.objects.Commit;
 import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class CacheControl {
+public class CacheControlV1 {
 
   private LoadingCache<String, Branch> branches =
       Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(1)).build(this::computeBranch);
@@ -64,14 +64,18 @@ public class CacheControl {
     }
   }
 
-  private LoadingCache<String, Build> builds =
+  private LoadingCache<String, BuildV1> builds =
       Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(1)).build(this::computeBuild);
 
-  public LoadingCache<String, Build> getBuilds() {
+  public LoadingCache<String, BuildV1> getBuilds() {
     return builds;
   }
 
-  private Build computeBuild(String branch) throws IOException {
+  private BuildV1 computeBuild(String branch) throws IOException {
+    Branch latestCommitBranch = branches.get(branch);
+    if (latestCommitBranch == null) {
+      return new BuildV1(-1, -1, new Branch("branch not found", null, false), null);
+    }
     Call call =
         Constants.HTTP_CLIENT.newCall(
             new Request.Builder()
@@ -85,10 +89,6 @@ public class CacheControl {
       try (InputStream in = response.body().byteStream()) {
         ObjectNode object = (ObjectNode) Constants.JSON_MAPPER.readTree(in);
         ArrayNode runs = (ArrayNode) object.get("workflow_runs");
-        Branch latestCommitBranch = branches.get(branch);
-        if (latestCommitBranch == null) {
-          return new Build(-1, -1, new Branch("branch not found", null, false), null);
-        }
 
         ObjectNode candidate = null;
         for (JsonNode node : runs) {
@@ -119,7 +119,7 @@ public class CacheControl {
         }
 
         if (candidate == null) {
-          return new Build(-1, -1, new Branch("no successful build", null, false), null);
+          return new BuildV1(-1, -1, new Branch("no successful build", null, false), null);
         }
 
         Call artifactsCall =
@@ -147,7 +147,7 @@ public class CacheControl {
             }
             String suiteUrl = candidate.get("check_suite_url").asText();
             int suiteId = Integer.parseInt(suiteUrl.substring(suiteUrl.lastIndexOf('/') + 1));
-            return new Build(
+            return new BuildV1(
                 candidate.get("run_number").asInt(), suiteId, latestCommitBranch, artifacts);
           }
         }

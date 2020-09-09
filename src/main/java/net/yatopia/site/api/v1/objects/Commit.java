@@ -1,4 +1,4 @@
-package net.yatopia.site.api.objects;
+package net.yatopia.site.api.v1.objects;
 
 public final class Commit {
 

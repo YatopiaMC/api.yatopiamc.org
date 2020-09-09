@@ -8,10 +8,14 @@ import static spark.Spark.options;
 import static spark.Spark.port;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import net.yatopia.site.api.routes.LatestBuildRoute;
-import net.yatopia.site.api.routes.LatestCommitRoute;
 import net.yatopia.site.api.routes.OptionsHandler;
 import net.yatopia.site.api.util.Constants;
+import net.yatopia.site.api.v1.CacheControlV1;
+import net.yatopia.site.api.v1.routes.LatestBuildRouteV1;
+import net.yatopia.site.api.v1.routes.LatestCommitRoute;
+import net.yatopia.site.api.v2.CacheControlV2;
+import net.yatopia.site.api.v2.routes.LatestBuildDownloadRoute;
+import net.yatopia.site.api.v2.routes.LatestBuildRouteV2;
 
 public class APIBootstrap {
 
@@ -54,7 +58,7 @@ public class APIBootstrap {
         });
 
     OptionsHandler options = new OptionsHandler();
-    CacheControl cacheControl = new CacheControl();
+    CacheControlV1 cacheControlV1 = new CacheControlV1();
 
     get(
         "/",
@@ -75,9 +79,19 @@ public class APIBootstrap {
         });
     options("/", options);
 
-    get("/latestCommit", new LatestCommitRoute(cacheControl));
+    get("/latestCommit", new LatestCommitRoute(cacheControlV1));
     options("/latestCommit", options);
 
-    get("/latestBuild", new LatestBuildRoute(cacheControl));
-    options("/latestBuild", options);  }
+    get("/latestBuild", new LatestBuildRouteV1(cacheControlV1));
+    options("/latestBuild", options);
+
+    // v2
+    CacheControlV2 cacheControlV2 = new CacheControlV2(cacheControlV1);
+
+    get("/v2/latestBuild", new LatestBuildRouteV2(cacheControlV2));
+    options("/v2/latestBuild", options);
+
+    get("/v2/latestBuild/download", new LatestBuildDownloadRoute(cacheControlV2));
+    options("/v2/latestBuild/download", options);
+  }
 }

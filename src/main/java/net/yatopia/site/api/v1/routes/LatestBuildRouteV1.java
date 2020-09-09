@@ -1,21 +1,22 @@
-package net.yatopia.site.api.routes;
+package net.yatopia.site.api.v1.routes;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import net.yatopia.site.api.CacheControl;
-import net.yatopia.site.api.objects.Build;
+import net.yatopia.site.api.v1.CacheControlV1;
+import net.yatopia.site.api.v1.objects.BuildV1;
 import net.yatopia.site.api.util.Constants;
 import net.yatopia.site.api.util.RateLimiter;
 import net.yatopia.site.api.util.Utils;
+import net.yatopia.site.api.v1.util.UtilsV1;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 
-public class LatestBuildRoute implements Route {
+public class LatestBuildRouteV1 implements Route {
 
-  private final CacheControl cacheControl;
+  private final CacheControlV1 cacheControl;
 
-  public LatestBuildRoute(CacheControl cacheControl) {
+  public LatestBuildRouteV1(CacheControlV1 cacheControl) {
     this.cacheControl = cacheControl;
   }
 
@@ -28,7 +29,7 @@ public class LatestBuildRoute implements Route {
       response.status(429);
       return Utils.rateLimitExceeded();
     }
-    Build build =
+    BuildV1 build =
         cacheControl
             .getBuilds()
             .get(request.queryParamOrDefault("branch", Constants.DEFAULT_BRANCH));
@@ -39,7 +40,7 @@ public class LatestBuildRoute implements Route {
       node.put("message", "GH returned non 200 code whilst trying to get the latest build.");
       return node;
     }
-    ObjectNode responseNode = Utils.buildResponseNode(build);
+    ObjectNode responseNode = UtilsV1.buildResponseNode(build);
     JsonNode error = responseNode.get("error");
     if (error != null) {
       response.status(error.asInt());
