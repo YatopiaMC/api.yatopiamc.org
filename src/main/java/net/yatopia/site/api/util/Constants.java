@@ -8,7 +8,7 @@ public class Constants {
 
   // settings for anybody forking
   public static final String GH_REPOSITORY = "YatopiaMC/Yatopia";
-  public static final String DEFAULT_BRANCH = "ver/1.16.2";
+  public static final String DEFAULT_BRANCH = "ver/1.16.3";
   public static final int RATELIMIT = 100;
   public static final String API_BASE_URL = "https://api.yatopia.net/";
 

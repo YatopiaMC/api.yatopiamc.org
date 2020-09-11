@@ -2,10 +2,10 @@ package net.yatopia.site.api.v1.util;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import net.yatopia.site.api.util.Constants;
 import net.yatopia.site.api.v1.objects.Artifact;
 import net.yatopia.site.api.v1.objects.BuildV1;
 import net.yatopia.site.api.v1.objects.Commit;
-import net.yatopia.site.api.util.Constants;
 
 public class UtilsV1 {
 
@@ -45,6 +45,9 @@ public class UtilsV1 {
     }
 
     node.set("artifacts", artifacts);
+    node.put(
+        "notice",
+        "Since 1.16.3 GH artifacts are not archived. Use /v2/latestBuild if you need download links.");
     return node;
   }
 
