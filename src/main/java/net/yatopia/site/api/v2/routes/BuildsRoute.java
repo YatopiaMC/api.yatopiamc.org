@@ -1,7 +1,8 @@
 package net.yatopia.site.api.v2.routes;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.List;
 import net.yatopia.site.api.util.Constants;
 import net.yatopia.site.api.util.RateLimiter;
 import net.yatopia.site.api.util.Utils;
@@ -12,11 +13,11 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 
-public class LatestBuildRouteV2 implements Route {
+public class BuildsRoute implements Route {
 
   private final CacheControlV2 cacheControl;
 
-  public LatestBuildRouteV2(CacheControlV2 cacheControl) {
+  public BuildsRoute(CacheControlV2 cacheControl) {
     this.cacheControl = cacheControl;
   }
 
@@ -29,24 +30,28 @@ public class LatestBuildRouteV2 implements Route {
       response.status(429);
       return Utils.rateLimitExceeded();
     }
-    BuildV2 build =
-        cacheControl
-            .getLatestBuilds()
-            .get(request.queryParamOrDefault("branch", Constants.DEFAULT_BRANCH));
-    if (build == null) {
+    String branch = request.queryParamOrDefault("branch", Constants.DEFAULT_BRANCH);
+    List<BuildV2> builds = cacheControl.getLatest10Builds().get(branch);
+    if (builds == null || builds.size() == 0) {
       response.status(404);
       ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
       node.put("error", 404);
       node.put("message", "Invalid job.");
       return node;
     }
-    ObjectNode responseNode = UtilsV2.buildResponseNode(build, true);
-    JsonNode error = responseNode.get("error");
-    if (error != null) {
-      response.status(error.asInt());
-    } else {
-      response.status(200);
+    if (builds.size() == 1 && builds.get(0).getBranch().equalsIgnoreCase("Branch or builds not found")) {
+      ObjectNode object = UtilsV2.buildResponseNode(builds.get(0));
+      response.status(object.get("error").asInt());
+      return object;
     }
-    return responseNode;
+    ObjectNode ret = Constants.JSON_MAPPER.createObjectNode();
+    ArrayNode buildsNode = Constants.JSON_MAPPER.createArrayNode();
+    for (BuildV2 build : builds) {
+      ObjectNode node = UtilsV2.buildResponseNode(build);
+      buildsNode.add(node);
+    }
+    response.status(200);
+    ret.set("builds", buildsNode);
+    return ret;
   }
 }

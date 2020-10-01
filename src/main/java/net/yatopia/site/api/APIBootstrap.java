@@ -14,6 +14,9 @@ import net.yatopia.site.api.v1.CacheControlV1;
 import net.yatopia.site.api.v1.routes.LatestBuildRouteV1;
 import net.yatopia.site.api.v1.routes.LatestCommitRoute;
 import net.yatopia.site.api.v2.CacheControlV2;
+import net.yatopia.site.api.v2.routes.BuildDownloadRoute;
+import net.yatopia.site.api.v2.routes.BuildRoute;
+import net.yatopia.site.api.v2.routes.BuildsRoute;
 import net.yatopia.site.api.v2.routes.LatestBuildDownloadRoute;
 import net.yatopia.site.api.v2.routes.LatestBuildRouteV2;
 
@@ -86,12 +89,21 @@ public class APIBootstrap {
     options("/latestBuild", options);
 
     // v2
-    CacheControlV2 cacheControlV2 = new CacheControlV2(cacheControlV1);
+    CacheControlV2 cacheControlV2 = new CacheControlV2();
 
     get("/v2/latestBuild", new LatestBuildRouteV2(cacheControlV2));
     options("/v2/latestBuild", options);
 
     get("/v2/latestBuild/download", new LatestBuildDownloadRoute(cacheControlV2));
     options("/v2/latestBuild/download", options);
+
+    get("/v2/build/:build", new BuildRoute(cacheControlV2));
+    options("/v2/build/:build", options);
+
+    get("/v2/build/:build/download", new BuildDownloadRoute(cacheControlV2));
+    options("/v2/build/:build/download", options);
+
+    get("/v2/builds", new BuildsRoute(cacheControlV2));
+    options("/v2/builds", options);
   }
 }

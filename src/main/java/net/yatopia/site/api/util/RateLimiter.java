@@ -2,13 +2,12 @@ package net.yatopia.site.api.util;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class RateLimiter {
 
   private static Cache<String, AtomicInteger> leftRequests =
-      Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(1)).build();
+      Caffeine.newBuilder().expireAfterWrite(Constants.RATELIMIT_PER).build();
 
   public static boolean canProceed(String address) {
     AtomicInteger requests = leftRequests.getIfPresent(address);

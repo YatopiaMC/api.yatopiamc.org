@@ -1,10 +1,10 @@
 package net.yatopia.site.api.v1.objects;
 
-public final class Commit {
+public final class CommitV1 {
 
   private final String sha, authorName, authorNickname, committerName, committerNickname, message, timestamp;
 
-  public Commit(
+  public CommitV1(
       String sha,
       String authorName,
       String authorNickname,

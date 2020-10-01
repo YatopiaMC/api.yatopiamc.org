@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import net.yatopia.site.api.util.Constants;
 import net.yatopia.site.api.v1.objects.Artifact;
 import net.yatopia.site.api.v1.objects.BuildV1;
-import net.yatopia.site.api.v1.objects.Commit;
+import net.yatopia.site.api.v1.objects.CommitV1;
 
 public class UtilsV1 {
 
@@ -51,7 +51,7 @@ public class UtilsV1 {
     return node;
   }
 
-  public static ObjectNode commitNode(Commit commit) {
+  public static ObjectNode commitNode(CommitV1 commit) {
     ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
     node.put("sha", commit.getSha());
     node.put("authoredAt", commit.getTimestamp());

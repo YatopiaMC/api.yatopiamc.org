@@ -14,7 +14,7 @@ import net.yatopia.site.api.util.Constants;
 import net.yatopia.site.api.v1.objects.Artifact;
 import net.yatopia.site.api.v1.objects.Branch;
 import net.yatopia.site.api.v1.objects.BuildV1;
-import net.yatopia.site.api.v1.objects.Commit;
+import net.yatopia.site.api.v1.objects.CommitV1;
 import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -22,7 +22,7 @@ import okhttp3.Response;
 public class CacheControlV1 {
 
   private LoadingCache<String, Branch> branches =
-      Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(1)).build(this::computeBranch);
+      Caffeine.newBuilder().expireAfterWrite(Constants.CACHE_TIME).build(this::computeBranch);
 
   public LoadingCache<String, Branch> getBranches() {
     return branches;
@@ -51,7 +51,7 @@ public class CacheControlV1 {
         String timestamp = object.get("commit").get("commit").get("author").get("date").asText();
         return new Branch(
             object.get("name").asText(),
-            new Commit(
+            new CommitV1(
                 commitSha,
                 authorName,
                 authorNickname,
@@ -65,7 +65,7 @@ public class CacheControlV1 {
   }
 
   private LoadingCache<String, BuildV1> builds =
-      Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(1)).build(this::computeBuild);
+      Caffeine.newBuilder().expireAfterWrite(Constants.CACHE_TIME).build(this::computeBuild);
 
   public LoadingCache<String, BuildV1> getBuilds() {
     return builds;

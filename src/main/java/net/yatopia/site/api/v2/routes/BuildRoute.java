@@ -1,6 +1,5 @@
 package net.yatopia.site.api.v2.routes;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import net.yatopia.site.api.util.Constants;
 import net.yatopia.site.api.util.RateLimiter;
@@ -12,11 +11,11 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 
-public class LatestBuildRouteV2 implements Route {
+public class BuildRoute implements Route {
 
   private final CacheControlV2 cacheControl;
 
-  public LatestBuildRouteV2(CacheControlV2 cacheControl) {
+  public BuildRoute(CacheControlV2 cacheControl) {
     this.cacheControl = cacheControl;
   }
 
@@ -29,24 +28,33 @@ public class LatestBuildRouteV2 implements Route {
       response.status(429);
       return Utils.rateLimitExceeded();
     }
-    BuildV2 build =
-        cacheControl
-            .getLatestBuilds()
-            .get(request.queryParamOrDefault("branch", Constants.DEFAULT_BRANCH));
-    if (build == null) {
+    String branch = request.queryParamOrDefault("branch", Constants.DEFAULT_BRANCH);
+    String build = request.params("build");
+    int number;
+    try {
+      number = Integer.parseInt(build);
+    } catch (NumberFormatException e) {
+      response.status(400);
+      ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
+      node.put("error",400);
+      node.put("message", "Build number '" + build + "' is invalid.");
+      node.put("note", "If you wanted to get the latest build, use /v2/latestBuild route");
+      return node;
+    }
+    BuildV2 buildObj = cacheControl.searchForBuild(branch, number);
+    if (buildObj == null) {
       response.status(404);
       ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
       node.put("error", 404);
       node.put("message", "Invalid job.");
       return node;
     }
-    ObjectNode responseNode = UtilsV2.buildResponseNode(build, true);
-    JsonNode error = responseNode.get("error");
-    if (error != null) {
-      response.status(error.asInt());
+    ObjectNode ret = UtilsV2.buildResponseNode(buildObj);
+    if (ret.has("error")) {
+      response.status(ret.get("error").asInt());
     } else {
       response.status(200);
     }
-    return responseNode;
+    return ret;
   }
 }
