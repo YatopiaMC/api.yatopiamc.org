@@ -37,7 +37,7 @@ public class LatestBuildRouteV2 implements Route {
       response.status(404);
       ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
       node.put("error", 404);
-      node.put("message", "Invalid job.");
+      node.put("message", "Branch or builds not found");
       return node;
     }
     ObjectNode responseNode = UtilsV2.buildResponseNode(build, true);

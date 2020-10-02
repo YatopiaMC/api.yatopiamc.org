@@ -36,13 +36,8 @@ public class BuildsRoute implements Route {
       response.status(404);
       ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
       node.put("error", 404);
-      node.put("message", "Invalid job.");
+      node.put("message", "Branch or builds not found");
       return node;
-    }
-    if (builds.size() == 1 && builds.get(0).getBranch().equalsIgnoreCase("Branch or builds not found")) {
-      ObjectNode object = UtilsV2.buildResponseNode(builds.get(0));
-      response.status(object.get("error").asInt());
-      return object;
     }
     ObjectNode ret = Constants.JSON_MAPPER.createObjectNode();
     ArrayNode buildsNode = Constants.JSON_MAPPER.createArrayNode();

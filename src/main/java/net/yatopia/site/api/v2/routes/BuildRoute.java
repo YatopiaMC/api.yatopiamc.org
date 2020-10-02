@@ -36,7 +36,7 @@ public class BuildRoute implements Route {
     } catch (NumberFormatException e) {
       response.status(400);
       ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
-      node.put("error",400);
+      node.put("error", 400);
       node.put("message", "Build number '" + build + "' is invalid.");
       node.put("note", "If you wanted to get the latest build, use /v2/latestBuild route");
       return node;

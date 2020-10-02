@@ -7,9 +7,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import net.yatopia.site.api.util.Constants;
 import net.yatopia.site.api.v2.objects.BuildV2;
@@ -36,7 +34,7 @@ public class CacheControlV2 {
                 .build());
     try (Response response = call.execute()) {
       if (response.code() == 404) {
-        return new BuildV2(-1, "Branch or builds not found", null, null, null);
+        return null;
       }
       try (InputStream in = response.body().byteStream()) {
         ObjectNode object = (ObjectNode) Constants.JSON_MAPPER.readTree(in);
@@ -81,9 +79,6 @@ public class CacheControlV2 {
       if (build.getNumber() == number) {
         return build;
       }
-      if (build.getBranch().equalsIgnoreCase("Branch or builds not found")) {
-        return build;
-      }
     }
     return new BuildV2(-1, "Branch or builds not found", null, null, null);
   }
@@ -97,8 +92,7 @@ public class CacheControlV2 {
                 .build());
     try (Response response = call.execute()) {
       if (response.code() == 404) {
-        return Collections.singletonList(
-            new BuildV2(-1, "Branch or builds not found", null, null, null));
+        return null;
       }
       try (InputStream in = response.body().byteStream()) {
         List<BuildV2> ret = new ArrayList<>();
@@ -114,7 +108,8 @@ public class CacheControlV2 {
           if (nodeObject.get("changeSets").isArray() && nodeObject.get("changeSets").isEmpty()) {
             continue;
           }
-          ObjectNode changeSets = (ObjectNode) nodeObject.get("changeSets").get(0).get("items").get(0);
+          ObjectNode changeSets =
+              (ObjectNode) nodeObject.get("changeSets").get(0).get("items").get(0);
           ret.add(
               new BuildV2(
                   number,
@@ -127,7 +122,7 @@ public class CacheControlV2 {
                       changeSets.get("date").asText(),
                       changeSets.get("comment").asText())));
         }
-        return ret;
+        return ret.isEmpty() ? null : ret;
       }
     }
   }

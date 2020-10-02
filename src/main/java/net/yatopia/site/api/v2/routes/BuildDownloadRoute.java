@@ -42,17 +42,9 @@ public class BuildDownloadRoute implements Route {
       return node;
     }
     BuildV2 buildObj = cacheControl.searchForBuild(branch, number);
-    if (buildObj == null) {
+    if (buildObj == null || buildObj.getBranch().equalsIgnoreCase("Branch or builds not found")) {
       response.status(404);
       response.type("application/json");
-      ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
-      node.put("error", 404);
-      node.put("message", "Invalid job.");
-      return node;
-    }
-    if (buildObj.getBranch().equalsIgnoreCase("Branch or builds not found")) {
-      response.type("application/json");
-      response.status(404);
       ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
       node.put("error", 404);
       node.put("message", "Branch or builds not found");

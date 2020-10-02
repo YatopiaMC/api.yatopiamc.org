@@ -31,15 +31,7 @@ public class LatestBuildDownloadRoute implements Route {
         cacheControl
             .getLatestBuilds()
             .get(request.queryParamOrDefault("branch", Constants.DEFAULT_BRANCH));
-    if (build == null) {
-      response.type("application/json");
-      response.status(404);
-      ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
-      node.put("error", 404);
-      node.put("message", "Invalid job.");
-      return node;
-    }
-    if (build.getBranch().equalsIgnoreCase("Branch or builds not found")) {
+    if (build == null || build.getBranch().equalsIgnoreCase("Branch or builds not found")) {
       response.type("application/json");
       response.status(404);
       ObjectNode node = Constants.JSON_MAPPER.createObjectNode();

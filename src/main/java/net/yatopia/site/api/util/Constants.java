@@ -16,7 +16,7 @@ public class Constants {
   public static final String API_BASE_URL = "https://api.yatopia.net/";
   public static final String JENKINS_JOB_BASE =
       "https://ci.codemc.io/job/YatopiaMC/job/Yatopia/job/%s/";
-  public static final int BUILDS_LISTED = 10;
+  public static final int BUILDS_LISTED = 15;
   public static final String CHANGESETS_WORD =
       "changeSets"; // differs on different jenkins installations
 
