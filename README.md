@@ -17,7 +17,7 @@ not going to drop it.
 <br>
 `GET /v2/latestBuild/download?branch=:branch` - downloads the latest build of the specified branch
 <br>
-`GET /v2/builds?branch=:branch` - gives information about the last 10 builds of the specified branch
+`GET /v2/builds?branch=:branch&onlySuccessful=<true/false>` - gives information about the last 10 builds of the specified branch
 <br>
 `GET /v2/build/:build?branch=:branch` - gives information about the specified build of the specified branch.
 <br>

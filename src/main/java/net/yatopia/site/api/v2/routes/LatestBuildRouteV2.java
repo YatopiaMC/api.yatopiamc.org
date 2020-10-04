@@ -30,9 +30,8 @@ public class LatestBuildRouteV2 implements Route {
       return Utils.rateLimitExceeded();
     }
     BuildV2 build =
-        cacheControl
-            .getLatestBuilds()
-            .get(request.queryParamOrDefault("branch", Constants.DEFAULT_BRANCH));
+        cacheControl.getLatestSuccessfulBuild(
+            request.queryParamOrDefault("branch", Constants.DEFAULT_BRANCH));
     if (build == null) {
       response.status(404);
       ObjectNode node = Constants.JSON_MAPPER.createObjectNode();

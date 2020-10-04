@@ -5,6 +5,7 @@ import net.yatopia.site.api.util.Constants;
 import net.yatopia.site.api.util.RateLimiter;
 import net.yatopia.site.api.util.Utils;
 import net.yatopia.site.api.v2.CacheControlV2;
+import net.yatopia.site.api.v2.objects.BuildResult;
 import net.yatopia.site.api.v2.objects.BuildV2;
 import spark.Request;
 import spark.Response;
@@ -48,6 +49,19 @@ public class BuildDownloadRoute implements Route {
       ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
       node.put("error", 404);
       node.put("message", "Branch or builds not found");
+      return node;
+    }
+    if (buildObj.getBuildResult() != BuildResult.SUCCESS) {
+      int status = buildObj.getBuildResult() == BuildResult.FAILURE ? 404 : 204;
+      response.status(status);
+      response.type("application/json");
+      ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
+      node.put("error", status);
+      String message =
+          buildObj.getBuildResult() == BuildResult.FAILURE
+              ? "Build resulted in failure, no artifacts present"
+              : "Build is currently building. No artifacts present.";
+      node.put("message", message);
       return node;
     }
     response.redirect(buildObj.getDownloadUrl());

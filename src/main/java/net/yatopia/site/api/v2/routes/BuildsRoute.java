@@ -7,6 +7,7 @@ import net.yatopia.site.api.util.Constants;
 import net.yatopia.site.api.util.RateLimiter;
 import net.yatopia.site.api.util.Utils;
 import net.yatopia.site.api.v2.CacheControlV2;
+import net.yatopia.site.api.v2.objects.BuildResult;
 import net.yatopia.site.api.v2.objects.BuildV2;
 import net.yatopia.site.api.v2.util.UtilsV2;
 import spark.Request;
@@ -31,7 +32,7 @@ public class BuildsRoute implements Route {
       return Utils.rateLimitExceeded();
     }
     String branch = request.queryParamOrDefault("branch", Constants.DEFAULT_BRANCH);
-    List<BuildV2> builds = cacheControl.getLatest10Builds().get(branch);
+    List<BuildV2> builds = cacheControl.getLatestBuilds().get(branch);
     if (builds == null || builds.size() == 0) {
       response.status(404);
       ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
@@ -39,9 +40,14 @@ public class BuildsRoute implements Route {
       node.put("message", "Branch or builds not found");
       return node;
     }
+    boolean onlySuccessful =
+        Boolean.parseBoolean(request.queryParamOrDefault("onlySuccessful", "false"));
     ObjectNode ret = Constants.JSON_MAPPER.createObjectNode();
     ArrayNode buildsNode = Constants.JSON_MAPPER.createArrayNode();
     for (BuildV2 build : builds) {
+      if (onlySuccessful && build.getBuildResult() != BuildResult.SUCCESS) {
+        continue;
+      }
       ObjectNode node = UtilsV2.buildResponseNode(build);
       buildsNode.add(node);
     }

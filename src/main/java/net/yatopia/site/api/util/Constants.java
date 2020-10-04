@@ -28,21 +28,16 @@ public class Constants {
   public static final String GITHUB_API_BRANCHES = BASE_GITHUB_API_URL + "branches/%s";
   public static final String GITHUB_API_BUILDS = BASE_GITHUB_API_URL + "actions/runs";
 
-  public static final String JENKINS_LATEST_BUILD = JENKINS_JOB_BASE + "lastBuild/api/json";
-  public static final String JENKINS_LAST_10_BUILDS =
+  public static final String JENKINS_LAST_BUILDS =
       JENKINS_JOB_BASE
-          + "/api/json?tree=builds[number,url,"
+          + "/api/json?tree=builds[number,url,result,"
           + CHANGESETS_WORD
           + "[items[comment,commitId,msg,date]]]{,"
           + BUILDS_LISTED
           + "}";
 
-  public static String getJenkinsLatestBuildUrlFor(String branch) {
-    return String.format(JENKINS_LATEST_BUILD, URLEncoder.encode(branch));
-  }
-
-  public static String getJenkinsLast10BuildsUrlFor(String branch) {
-    return String.format(JENKINS_LAST_10_BUILDS, URLEncoder.encode(branch));
+  public static String getJenkinsLastBuildsUrlFor(String branch) {
+    return String.format(JENKINS_LAST_BUILDS, URLEncoder.encode(branch));
   }
 
   // todo: non-permanent version of this

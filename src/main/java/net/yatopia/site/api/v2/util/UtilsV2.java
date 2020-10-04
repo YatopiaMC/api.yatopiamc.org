@@ -1,7 +1,9 @@
 package net.yatopia.site.api.v2.util;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import net.yatopia.site.api.util.Constants;
+import net.yatopia.site.api.v2.objects.BuildResult;
 import net.yatopia.site.api.v2.objects.BuildV2;
 import net.yatopia.site.api.v2.objects.CommitV2;
 
@@ -20,12 +22,22 @@ public class UtilsV2 {
     }
     ObjectNode branch = Constants.JSON_MAPPER.createObjectNode();
     branch.put("name", build.getBranch());
-    branch.set("commit", commitNode(build.getCommit()));
+    branch.set("commit", commitNode(build.getCommits()[0]));
 
     node.set("branch", branch);
+
+    ArrayNode changeSets = Constants.JSON_MAPPER.createArrayNode();
+    for (CommitV2 commit : build.getCommits()) {
+      changeSets.add(commitNode(commit));
+    }
+
+    node.set("changeSets", changeSets);
     node.put("number", build.getNumber());
     node.put("jenkinsViewUrl", build.getJenkinsVisilibityUrl());
-    node.put("downloadUrl", getDownloadUrl(build, latest));
+    node.put("status", build.getBuildResult().name());
+    node.put(
+        "downloadUrl",
+        build.getBuildResult() == BuildResult.SUCCESS ? getDownloadUrl(build, latest) : null);
     return node;
   }
 

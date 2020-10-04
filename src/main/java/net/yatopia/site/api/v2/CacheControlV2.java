@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import net.yatopia.site.api.util.Constants;
+import net.yatopia.site.api.v2.objects.BuildResult;
 import net.yatopia.site.api.v2.objects.BuildV2;
 import net.yatopia.site.api.v2.objects.CommitV2;
 import okhttp3.Call;
@@ -18,76 +19,44 @@ import okhttp3.Response;
 
 public class CacheControlV2 {
 
-  private final LoadingCache<String, BuildV2> latestBuilds =
-      Caffeine.newBuilder().expireAfterWrite(Constants.CACHE_TIME).build(this::computeBuild);
+  private final LoadingCache<String, List<BuildV2>> latestBuilds =
+      Caffeine.newBuilder().expireAfterWrite(Constants.CACHE_TIME).build(this::computeBuilds);
 
-  public LoadingCache<String, BuildV2> getLatestBuilds() {
+  public LoadingCache<String, List<BuildV2>> getLatestBuilds() {
     return latestBuilds;
   }
 
-  private BuildV2 computeBuild(String branch) throws IOException {
-    Call call =
-        Constants.HTTP_CLIENT.newCall(
-            new Request.Builder()
-                .url(Constants.getJenkinsLatestBuildUrlFor(branch))
-                .header("User-Agent", "api.yatopia.net")
-                .build());
-    try (Response response = call.execute()) {
-      if (response.code() == 404) {
-        return null;
-      }
-      try (InputStream in = response.body().byteStream()) {
-        ObjectNode object = (ObjectNode) Constants.JSON_MAPPER.readTree(in);
-        int number = object.get("number").asInt();
-        String jenkinsVisibilityUrl = object.get("url").asText();
-        if (object.get("changeSets").isArray() && object.get("changeSets").isEmpty()) {
-          return new BuildV2(
-              number,
-              branch,
-              Constants.getJenkinsBuildDownloadUrlFor(branch, number),
-              jenkinsVisibilityUrl,
-              null);
-        }
-        ObjectNode changeSets = (ObjectNode) object.get("changeSets").get(0).get("items").get(0);
-        return new BuildV2(
-            number,
-            branch,
-            Constants.getJenkinsBuildDownloadUrlFor(branch, number),
-            jenkinsVisibilityUrl,
-            new CommitV2(
-                changeSets.get("commitId").asText(),
-                changeSets.get("msg").asText(),
-                changeSets.get("date").asText(),
-                changeSets.get("comment").asText()));
-      }
-    }
-  }
-
-  private final LoadingCache<String, List<BuildV2>> latest10Builds =
-      Caffeine.newBuilder().expireAfterWrite(Constants.CACHE_TIME).build(this::computeBuilds);
-
-  public LoadingCache<String, List<BuildV2>> getLatest10Builds() {
-    return latest10Builds;
-  }
-
   public BuildV2 searchForBuild(String branch, int number) {
-    List<BuildV2> builds = latest10Builds.get(branch);
-    if (builds == null) {
-      return new BuildV2(-1, "Branch or builds not found", null, null, null);
+    List<BuildV2> builds = latestBuilds.get(branch);
+    if (builds == null || builds.isEmpty()) {
+      return new BuildV2(-1, "Branch or builds not found", null, null, null, null);
     }
     for (BuildV2 build : builds) {
       if (build.getNumber() == number) {
         return build;
       }
     }
-    return new BuildV2(-1, "Branch or builds not found", null, null, null);
+    return new BuildV2(-1, "Branch or builds not found", null, null, null, null);
+  }
+
+  public BuildV2 getLatestSuccessfulBuild(String branch) {
+    List<BuildV2> lastBuilds = latestBuilds.get(branch);
+    if (lastBuilds == null || lastBuilds.isEmpty()) {
+      return new BuildV2(-1, "Branch or builds not found", null, null, null, null);
+    }
+    for (BuildV2 build : lastBuilds) {
+      if (build.getBuildResult() == BuildResult.SUCCESS) {
+        return build;
+      }
+    }
+    return new BuildV2(-1, "Branch or builds not found", null, null, null, null);
   }
 
   private List<BuildV2> computeBuilds(String branch) throws IOException {
     Call call =
         Constants.HTTP_CLIENT.newCall(
             new Request.Builder()
-                .url(Constants.getJenkinsLast10BuildsUrlFor(branch))
+                .url(Constants.getJenkinsLastBuildsUrlFor(branch))
                 .header("User-Agent", "api.yatopia.net")
                 .build());
     try (Response response = call.execute()) {
@@ -105,22 +74,42 @@ public class CacheControlV2 {
           ObjectNode nodeObject = (ObjectNode) node;
           int number = nodeObject.get("number").asInt();
           String jenkinsVisibilityUrl = nodeObject.get("url").asText();
-          if (nodeObject.get("changeSets").isArray() && nodeObject.get("changeSets").isEmpty()) {
+          if (!nodeObject.has("changeSets")
+              || (!nodeObject.get("changeSets").isArray()
+                  || nodeObject.get("changeSets").isEmpty())) {
             continue;
           }
-          ObjectNode changeSets =
-              (ObjectNode) nodeObject.get("changeSets").get(0).get("items").get(0);
+          ArrayNode changeSets = (ArrayNode) nodeObject.get("changeSets");
+          List<CommitV2> commitsList = new ArrayList<>();
+          for (JsonNode changeSetNode : changeSets) {
+            if (!changeSetNode.isObject()) {
+              continue;
+            }
+            if (!changeSetNode.has("items") || !changeSetNode.get("items").isArray()) {
+              continue;
+            }
+            ArrayNode items = (ArrayNode) changeSetNode.get("items");
+            for (JsonNode commitNode : items) {
+              if (!commitNode.isObject()) {
+                continue;
+              }
+              commitsList.add(
+                  new CommitV2(
+                      commitNode.get("commitId").asText(),
+                      commitNode.get("msg").asText(),
+                      commitNode.get("date").asText(),
+                      commitNode.get("comment").asText()));
+            }
+          }
+
           ret.add(
               new BuildV2(
                   number,
                   branch,
                   Constants.getJenkinsBuildDownloadUrlFor(branch, number),
                   jenkinsVisibilityUrl,
-                  new CommitV2(
-                      changeSets.get("commitId").asText(),
-                      changeSets.get("msg").asText(),
-                      changeSets.get("date").asText(),
-                      changeSets.get("comment").asText())));
+                  BuildResult.parse(nodeObject.get("result")),
+                  commitsList.toArray(new CommitV2[0])));
         }
         return ret.isEmpty() ? null : ret;
       }
