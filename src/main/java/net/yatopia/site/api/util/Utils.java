@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class Utils {
 
+  public static ObjectNode EMPTY_OBJECT = Constants.JSON_MAPPER.createObjectNode();
+
   private static ObjectNode rateLimitExceeded;
 
   public static ObjectNode rateLimitExceeded() {
