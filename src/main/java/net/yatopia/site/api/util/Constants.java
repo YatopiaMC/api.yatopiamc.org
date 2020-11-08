@@ -1,6 +1,7 @@
 package net.yatopia.site.api.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.time.Duration;
 import okhttp3.OkHttpClient;
@@ -36,13 +37,13 @@ public class Constants {
           + BUILDS_LISTED
           + "}";
 
-  public static String getJenkinsLastBuildsUrlFor(String branch) {
-    return String.format(JENKINS_LAST_BUILDS, URLEncoder.encode(branch));
+  public static String getJenkinsLastBuildsUrlFor(String branch) throws IOException {
+    return String.format(JENKINS_LAST_BUILDS, URLEncoder.encode(branch, "UTF-8"));
   }
 
   // todo: non-permanent version of this
-  public static String getJenkinsBuildDownloadUrlFor(String branch, int build) {
-    return String.format(JENKINS_JOB_BASE, URLEncoder.encode(branch))
+  public static String getJenkinsBuildDownloadUrlFor(String branch, int build) throws IOException {
+    return String.format(JENKINS_JOB_BASE, URLEncoder.encode(branch, "UTF-8"))
         + build
         + "/artifact/target/yatopia-"
         + branch.replace("ver/", "")

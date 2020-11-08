@@ -74,9 +74,7 @@ public class CacheControlV2 {
           ObjectNode nodeObject = (ObjectNode) node;
           int number = nodeObject.get("number").asInt();
           String jenkinsVisibilityUrl = nodeObject.get("url").asText();
-          if (!nodeObject.has("changeSets")
-              || (!nodeObject.get("changeSets").isArray()
-                  || nodeObject.get("changeSets").isEmpty())) {
+          if (!nodeObject.has("changeSets") || !nodeObject.get("changeSets").isArray()) {
             continue;
           }
           ArrayNode changeSets = (ArrayNode) nodeObject.get("changeSets");
