@@ -1,4 +1,4 @@
-# api.yatopia.net
+# api.yatopiamc.org
 RESTful api
 
 # Routes
