@@ -45,7 +45,7 @@ public class CacheControlV2 {
       return new BuildV2(-1, "Branch or builds not found", null, null, null, null);
     }
     for (BuildV2 build : lastBuilds) {
-      if (build.getBuildResult() == BuildResult.SUCCESS) {
+      if (build.getBuildResult() == BuildResult.SUCCESS && build.getDownloadUrl() != null) {
         return build;
       }
     }
@@ -99,12 +99,19 @@ public class CacheControlV2 {
                       commitNode.get("comment").asText()));
             }
           }
+          String artifactRelativePath = null;
+          if (nodeObject.get("artifacts").isArray() && !nodeObject.get("artifacts").isEmpty()) {
+            JsonNode artifact = nodeObject.get("artifacts").get(0);
+            if (artifact.isObject() && !artifact.isEmpty()) {
+              artifactRelativePath = artifact.get("relativePath").asText();
+            }
+          }
 
           ret.add(
               new BuildV2(
                   number,
                   branch,
-                  Constants.getJenkinsBuildDownloadUrlFor(branch, number),
+                  Constants.getJenkinsBuildDownloadUrlFor(branch, number, artifactRelativePath),
                   jenkinsVisibilityUrl,
                   BuildResult.parse(nodeObject.get("result")),
                   commitsList.toArray(new CommitV2[0])));

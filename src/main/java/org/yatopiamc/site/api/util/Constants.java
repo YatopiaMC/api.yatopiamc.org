@@ -32,7 +32,7 @@ public class Constants {
 
   public static final String JENKINS_LAST_BUILDS =
       JENKINS_JOB_BASE
-          + "/api/json?tree=builds[number,url,result,"
+          + "/api/json?tree=builds[number,url,result,artifacts[relativePath],"
           + CHANGESETS_WORD
           + "[items[comment,commitId,msg,date]]]{,"
           + BUILDS_LISTED
@@ -42,14 +42,14 @@ public class Constants {
     return String.format(JENKINS_LAST_BUILDS, URLEncoder.encode(branch, "UTF-8"));
   }
 
-  // todo: non-permanent version of this
-  public static String getJenkinsBuildDownloadUrlFor(String branch, int build) throws IOException {
+  public static String getJenkinsBuildDownloadUrlFor(
+      String branch, int build, String artifactRelativePath) throws IOException {
+    if (artifactRelativePath == null) {
+      return null;
+    }
     return String.format(JENKINS_JOB_BASE, URLEncoder.encode(branch, "UTF-8"))
         + build
-        + "/artifact/target/yatopia-"
-        + branch.replace("ver/", "")
-        + "-paperclip-b"
-        + build
-        + ".jar";
+        + "/artifact/"
+        + artifactRelativePath;
   }
 }

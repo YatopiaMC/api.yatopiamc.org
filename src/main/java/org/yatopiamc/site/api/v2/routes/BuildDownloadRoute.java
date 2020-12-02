@@ -51,7 +51,7 @@ public class BuildDownloadRoute implements Route {
       node.put("message", "Branch or builds not found");
       return node;
     }
-    if (buildObj.getBuildResult() != BuildResult.SUCCESS) {
+    if (buildObj.getBuildResult() != BuildResult.SUCCESS || buildObj.getDownloadUrl() == null) {
       int status = buildObj.getBuildResult() == BuildResult.FAILURE ? 404 : 204;
       response.status(status);
       response.type("application/json");
@@ -61,6 +61,9 @@ public class BuildDownloadRoute implements Route {
           buildObj.getBuildResult() == BuildResult.FAILURE
               ? "Build resulted in failure, no artifacts present"
               : "Build is currently building. No artifacts present.";
+      if (buildObj.getDownloadUrl() == null && buildObj.getBuildResult() == BuildResult.SUCCESS) {
+        message = "No artifacts present.";
+      }
       node.put("message", message);
       return node;
     }
