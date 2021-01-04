@@ -22,3 +22,7 @@ not going to drop it.
 `GET /v2/build/:build?branch=:branch` - gives information about the specified build of the specified branch.
 <br>
 `GET /v2/build/:build/download?branch=:branch` - downloads the specified build of the specified branch
+<br>
+`GET /v2/stableBuild?branch=:branch` - gives information about the latest stable build of the specified branch
+<br>
+`GET /v2/stableBuild/download?branch=:branch` - downloads the latest stable build of the specified branch

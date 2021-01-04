@@ -1,4 +1,4 @@
-package org.yatopiamc.site.api.v2.routes;
+package org.yatopiamc.site.api.v2.routes.download;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.yatopiamc.site.api.util.Constants;

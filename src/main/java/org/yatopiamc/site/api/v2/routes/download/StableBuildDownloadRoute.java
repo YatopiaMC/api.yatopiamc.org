@@ -1,22 +1,22 @@
-package org.yatopiamc.site.api.v2.routes;
+package org.yatopiamc.site.api.v2.routes.download;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.yatopiamc.site.api.util.Constants;
 import org.yatopiamc.site.api.util.RateLimiter;
+import org.yatopiamc.site.api.util.StableBuildJSON;
 import org.yatopiamc.site.api.util.Utils;
-import org.yatopiamc.site.api.v2.CacheControlV2;
 import org.yatopiamc.site.api.v2.objects.BuildResult;
 import org.yatopiamc.site.api.v2.objects.BuildV2;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 
-public class BuildDownloadRoute implements Route {
+public class StableBuildDownloadRoute implements Route {
 
-  private final CacheControlV2 cacheControl;
+  private final StableBuildJSON stableBuildCache;
 
-  public BuildDownloadRoute(CacheControlV2 cacheControl) {
-    this.cacheControl = cacheControl;
+  public StableBuildDownloadRoute(StableBuildJSON stableBuildCache) {
+    this.stableBuildCache = stableBuildCache;
   }
 
   @Override
@@ -29,20 +29,15 @@ public class BuildDownloadRoute implements Route {
       return Utils.rateLimitExceeded();
     }
     String branch = request.queryParamOrDefault("branch", Constants.DEFAULT_BRANCH);
-    String build = request.params("build");
-    int number;
-    try {
-      number = Integer.parseInt(build);
-    } catch (NumberFormatException e) {
-      response.status(400);
-      response.type("application/json");
+    int number = stableBuildCache.getStableBuild(branch);
+    if (number == -1) {
+      response.status(404);
       ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
-      node.put("error", 400);
-      node.put("message", "Build number '" + build + "' is invalid.");
-      node.put("note", "If you wanted to get the latest build, use /v2/latestBuild route");
+      node.put("error", 404);
+      node.put("message", "Stable build for branch \"" + branch + "\" not specified.");
       return node;
     }
-    BuildV2 buildObj = cacheControl.searchForBuild(branch, number);
+    BuildV2 buildObj = stableBuildCache.getCacheControl().searchForBuild(branch, number);
     if (buildObj == null || buildObj.getBranch().equalsIgnoreCase("Branch or builds not found")) {
       response.status(404);
       response.type("application/json");
@@ -51,7 +46,7 @@ public class BuildDownloadRoute implements Route {
       node.put("message", "Branch or builds not found");
       return node;
     }
-    if (buildObj.getBuildResult() != BuildResult.SUCCESS || buildObj.getDownloadUrl() == null) {
+    if (buildObj.getDownloadUrl() == null) {
       int status = buildObj.getBuildResult() == BuildResult.FAILURE ? 404 : 204;
       response.status(status);
       response.type("application/json");
@@ -60,10 +55,9 @@ public class BuildDownloadRoute implements Route {
       String message =
           buildObj.getBuildResult() == BuildResult.FAILURE
               ? "Build resulted in failure, no artifacts present"
-              : "Build is currently building. No artifacts present.";
-      if (buildObj.getDownloadUrl() == null && buildObj.getBuildResult() == BuildResult.SUCCESS) {
-        message = "No artifacts present.";
-      }
+              : (buildObj.getBuildResult() == BuildResult.SUCCESS
+                  ? "No artifacts present."
+                  : "Build is currently building. No artifacts present.");
       node.put("message", message);
       return node;
     }

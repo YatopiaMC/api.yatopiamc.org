@@ -10,15 +10,18 @@ import static spark.Spark.port;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.yatopiamc.site.api.routes.OptionsHandler;
 import org.yatopiamc.site.api.util.Constants;
+import org.yatopiamc.site.api.util.StableBuildJSON;
 import org.yatopiamc.site.api.v1.CacheControlV1;
 import org.yatopiamc.site.api.v1.routes.LatestBuildRouteV1;
 import org.yatopiamc.site.api.v1.routes.LatestCommitRoute;
 import org.yatopiamc.site.api.v2.CacheControlV2;
-import org.yatopiamc.site.api.v2.routes.BuildDownloadRoute;
+import org.yatopiamc.site.api.v2.routes.StableBuildRoute;
+import org.yatopiamc.site.api.v2.routes.download.BuildDownloadRoute;
 import org.yatopiamc.site.api.v2.routes.BuildRoute;
 import org.yatopiamc.site.api.v2.routes.BuildsRoute;
-import org.yatopiamc.site.api.v2.routes.LatestBuildDownloadRoute;
+import org.yatopiamc.site.api.v2.routes.download.LatestBuildDownloadRoute;
 import org.yatopiamc.site.api.v2.routes.LatestBuildRouteV2;
+import org.yatopiamc.site.api.v2.routes.download.StableBuildDownloadRoute;
 
 public class APIBootstrap {
 
@@ -105,5 +108,13 @@ public class APIBootstrap {
 
     get("/v2/builds", new BuildsRoute(cacheControlV2));
     options("/v2/builds", options);
+
+    StableBuildJSON stableBuildCache = new StableBuildJSON(cacheControlV2);
+
+    get("/v2/stableBuild", new StableBuildRoute(stableBuildCache));
+    options("/v2/stableBuild", options);
+
+    get("/v2/stableBuild/download", new StableBuildDownloadRoute(stableBuildCache));
+    options("/v2/stableBuild/download", options);
   }
 }
