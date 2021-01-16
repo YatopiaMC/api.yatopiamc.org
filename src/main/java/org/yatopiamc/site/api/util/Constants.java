@@ -10,7 +10,7 @@ public class Constants {
 
   // settings for anybody forking
   public static final String GH_REPOSITORY = "YatopiaMC/Yatopia";
-  public static final String DEFAULT_BRANCH = "ver/1.16.4";
+  public static final String DEFAULT_BRANCH = "ver/1.16.5";
   public static final int RATELIMIT = 20;
   public static final Duration RATELIMIT_PER = Duration.ofMinutes(2);
   public static final Duration CACHE_TIME = Duration.ofMinutes(15);
