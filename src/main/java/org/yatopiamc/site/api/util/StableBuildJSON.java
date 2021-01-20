@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import org.yatopiamc.site.api.v2.CacheControlV2;
+import org.yatopiamc.site.api.v2.objects.BuildQuery;
 import org.yatopiamc.site.api.v2.objects.BuildV2;
 
 public class StableBuildJSON {
@@ -28,8 +29,9 @@ public class StableBuildJSON {
   private int computeStableBuild(String branch) throws IOException {
     File stableBuildJSON = new File(".", "stableBuild.json");
     if (!stableBuildJSON.exists()) {
-      BuildV2 build = cacheControl.getLatestSuccessfulBuild(branch);
-      if (build.getNumber() != -1) {
+      BuildQuery query = cacheControl.getLatestSuccessfulBuild(branch);
+      BuildV2 build = query.getBuild();
+      if (build != null) {
         stableBuildJSON.createNewFile();
         try (Writer writer = new FileWriter(stableBuildJSON)) {
           ObjectNode node = Constants.JSON_MAPPER.createObjectNode();

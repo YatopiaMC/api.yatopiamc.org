@@ -11,16 +11,11 @@ import org.yatopiamc.site.api.v2.objects.CommitV2;
 public class UtilsV2 {
 
   public static ObjectNode buildResponseNode(BuildV2 build) {
-    return buildResponseNode(build, false);
+    return buildResponseNode(build, false, false);
   }
 
-  public static ObjectNode buildResponseNode(BuildV2 build, boolean latest) {
+  public static ObjectNode buildResponseNode(BuildV2 build, boolean latest, boolean stable) {
     ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
-    if (build.getBranch().equalsIgnoreCase("Branch or builds not found")) {
-      node.put("error", 404);
-      node.put("message", "Branch or builds not found");
-      return node;
-    }
     ObjectNode branch = Constants.JSON_MAPPER.createObjectNode();
     branch.put("name", build.getBranch());
     if (build.getCommits().length >= 1) {
@@ -44,13 +39,18 @@ public class UtilsV2 {
     node.put("status", build.getBuildResult().name());
     node.put(
         "downloadUrl",
-        build.getBuildResult() == BuildResult.SUCCESS ? getDownloadUrl(build, latest) : null);
+        build.getBuildResult() == BuildResult.SUCCESS
+            ? getDownloadUrl(build, latest, stable)
+            : null);
     return node;
   }
 
-  private static String getDownloadUrl(BuildV2 build, boolean latest) {
+  private static String getDownloadUrl(BuildV2 build, boolean latest, boolean stable) {
     if (latest) {
       return Constants.API_BASE_URL + "v2/latestBuild/download?branch=" + build.getBranch();
+    }
+    if (stable) {
+      return Constants.API_BASE_URL + "v2/stableBuild/download?branch=" + build.getBranch();
     }
     return Constants.API_BASE_URL
         + "v2/build/"

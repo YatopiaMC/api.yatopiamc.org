@@ -1,11 +1,15 @@
 package org.yatopiamc.site.api.v2.routes;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.springframework.http.HttpStatus;
 import org.yatopiamc.site.api.util.Constants;
+import org.yatopiamc.site.api.util.Pair;
 import org.yatopiamc.site.api.util.RateLimiter;
 import org.yatopiamc.site.api.util.StableBuildJSON;
 import org.yatopiamc.site.api.util.Utils;
+import org.yatopiamc.site.api.v2.objects.BuildQuery;
 import org.yatopiamc.site.api.v2.objects.BuildV2;
+import org.yatopiamc.site.api.v2.objects.QueryResult;
 import org.yatopiamc.site.api.v2.util.UtilsV2;
 import spark.Request;
 import spark.Response;
@@ -37,20 +41,23 @@ public class StableBuildRoute implements Route {
       node.put("message", "Stable build for branch \"" + branch + "\" not specified.");
       return node;
     }
-    BuildV2 buildObj = stableBuildCache.getCacheControl().searchForBuild(branch, number);
-    if (buildObj == null) {
-      response.status(404);
+    BuildQuery query = stableBuildCache.getCacheControl().searchForBuild(branch, number);
+    Pair<QueryResult, HttpStatus> result = query.getResult();
+    if (result.left() != null && QueryResult.isFailure(result.left())) {
+      response.status(result.right().value());
+      response.type("application/json");
+      return result.left().toJson(result.right());
+    }
+    if (result.left() == null && result.right() != HttpStatus.OK) {
+      response.status(result.right().value());
+      response.type("application/json");
       ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
-      node.put("error", 404);
-      node.put("message", "Invalid job.");
+      node.put("error", result.right().value());
+      node.put("message", result.right().getReasonPhrase());
       return node;
     }
-    ObjectNode ret = UtilsV2.buildResponseNode(buildObj);
-    if (ret.has("error")) {
-      response.status(ret.get("error").asInt());
-    } else {
-      response.status(200);
-    }
-    return ret;
+    BuildV2 buildObj = query.getBuild();
+    response.status(200);
+    return UtilsV2.buildResponseNode(buildObj, false, true);
   }
 }

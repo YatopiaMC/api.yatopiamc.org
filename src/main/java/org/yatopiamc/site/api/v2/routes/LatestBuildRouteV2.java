@@ -1,12 +1,14 @@
 package org.yatopiamc.site.api.v2.routes;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.springframework.http.HttpStatus;
 import org.yatopiamc.site.api.util.Constants;
+import org.yatopiamc.site.api.util.Pair;
 import org.yatopiamc.site.api.util.RateLimiter;
 import org.yatopiamc.site.api.util.Utils;
 import org.yatopiamc.site.api.v2.CacheControlV2;
-import org.yatopiamc.site.api.v2.objects.BuildV2;
+import org.yatopiamc.site.api.v2.objects.BuildQuery;
+import org.yatopiamc.site.api.v2.objects.QueryResult;
 import org.yatopiamc.site.api.v2.util.UtilsV2;
 import spark.Request;
 import spark.Response;
@@ -29,23 +31,24 @@ public class LatestBuildRouteV2 implements Route {
       response.status(429);
       return Utils.rateLimitExceeded();
     }
-    BuildV2 build =
+    BuildQuery query =
         cacheControl.getLatestSuccessfulBuild(
             request.queryParamOrDefault("branch", Constants.DEFAULT_BRANCH));
-    if (build == null) {
-      response.status(404);
+    Pair<QueryResult, HttpStatus> result = query.getResult();
+    if (result.left() != null && QueryResult.isFailure(result.left())) {
+      response.status(result.right().value());
+      response.type("application/json");
+      return result.left().toJson(result.right());
+    }
+    if (result.left() == null && result.right() != HttpStatus.OK) {
+      response.status(result.right().value());
+      response.type("application/json");
       ObjectNode node = Constants.JSON_MAPPER.createObjectNode();
-      node.put("error", 404);
-      node.put("message", "Branch or builds not found");
+      node.put("error", result.right().value());
+      node.put("message", result.right().getReasonPhrase());
       return node;
     }
-    ObjectNode responseNode = UtilsV2.buildResponseNode(build, true);
-    JsonNode error = responseNode.get("error");
-    if (error != null) {
-      response.status(error.asInt());
-    } else {
-      response.status(200);
-    }
-    return responseNode;
+    response.status(200);
+    return UtilsV2.buildResponseNode(query.getBuild(), true, false);
   }
 }
