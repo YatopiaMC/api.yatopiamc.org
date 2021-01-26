@@ -2,3 +2,7 @@
 *.iml
 target/
 config.properties
+
+build/**
+
+.gradle/**
