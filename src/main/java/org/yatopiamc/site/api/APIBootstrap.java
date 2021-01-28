@@ -30,7 +30,7 @@ public class APIBootstrap {
   private static ObjectNode cachedDefault;
 
   public static void main(String[] args) {
-    port(1696);
+    port(80);
     initExceptionHandler(Throwable::printStackTrace);
     notFound(
         (request, response) -> {
